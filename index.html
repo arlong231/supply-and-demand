@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>시장 가격 변동 복습 퀴즈</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+:root{
+  --bg:#f0ede8;--card:#fff;--dark:#1c1a17;--accent:#e8500a;
+  --blue:#2356a8;--green:#1a7a4a;--red:#c0392b;--yellow:#f5c518;
+  --gray:#888;--border:#ddd9d2;--font:'Noto Sans KR',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--dark);min-height:100vh;padding-bottom:60px;}
+.top-header{background:var(--dark);color:#fff;padding:18px 24px 14px;}
+.top-header .tag{font-size:11px;font-weight:700;letter-spacing:2px;color:#aaa;margin-bottom:4px;}
+.top-header h1{font-size:20px;font-weight:900;letter-spacing:-0.5px;}
+.top-header h1 span{color:var(--accent);}
+.progress-bar-wrap{background:#2e2b27;padding:10px 24px;display:flex;align-items:center;gap:12px;}
+.progress-bar-bg{flex:1;height:6px;background:#444;border-radius:99px;overflow:hidden;}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width 0.5s ease;width:0%;}
+.progress-text{font-size:12px;font-weight:700;color:#aaa;white-space:nowrap;}
+.container{max-width:680px;margin:0 auto;padding:24px 16px 0;}
+.q-card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.09);margin-bottom:24px;opacity:0;transform:translateY(20px);animation:fadeUp 0.4s ease forwards;}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+.q-card-header{padding:14px 20px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.q-num{width:32px;height:32px;background:var(--dark);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0;}
+.q-topic{font-size:12px;font-weight:700;color:var(--gray);}
+.q-topic span{display:inline-block;background:var(--bg);border-radius:4px;padding:2px 8px;margin-left:4px;font-size:11px;font-weight:700;}
+.situation{margin:16px 20px 0;background:#fffaf5;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 14px;}
+.situation .sit-label{font-size:10.5px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-bottom:5px;}
+.situation p{font-size:14px;line-height:1.65;font-weight:500;}
+.q-body{padding:16px 20px 20px;}
+.step-label{font-size:12px;font-weight:900;color:var(--gray);letter-spacing:0.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--dark);color:#fff;border-radius:50%;font-size:10px;font-weight:900;flex-shrink:0;}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+.choice-btn{padding:9px 18px;border:2px solid var(--border);border-radius:8px;background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--dark);cursor:pointer;transition:all 0.15s;}
+.choice-btn:hover:not(.locked):not(.confirmed-correct):not(.confirmed-wrong){border-color:var(--accent);background:#fff8f4;color:var(--accent);}
+.choice-btn.selected{border-color:var(--dark);background:var(--dark);color:#fff;}
+.choice-btn.confirmed-correct{border-color:var(--green);background:#e8f7ee;color:var(--green);cursor:default;}
+.choice-btn.confirmed-wrong{border-color:var(--red);background:#fdecea;color:var(--red);cursor:default;}
+.choice-btn.locked{cursor:default;opacity:0.4;}
+.confirm-btn{display:none;margin-top:4px;padding:7px 18px;border:2px solid var(--dark);border-radius:8px;background:var(--dark);font-family:var(--font);font-size:12px;font-weight:700;color:#fff;cursor:pointer;transition:all 0.15s;}
+.confirm-btn:hover{background:#333;}
+.confirm-btn.visible{display:inline-block;}
+.result-msg{font-size:13px;font-weight:700;min-height:20px;margin:6px 0 0 2px;}
+.result-msg.ok{color:var(--green);}
+.result-msg.ng{color:var(--red);}
+.retry-step-btn{display:none;margin-top:6px;padding:6px 14px;border:1.5px solid var(--gray);border-radius:6px;background:#fff;font-family:var(--font);font-size:12px;font-weight:700;color:var(--gray);cursor:pointer;transition:all 0.15s;}
+.retry-step-btn:hover{border-color:var(--dark);color:var(--dark);}
+.retry-step-btn.visible{display:inline-block;}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.graph-section{margin:16px 0 14px;background:#f9f8f6;border:1.5px solid var(--border);border-radius:12px;padding:16px;display:none;}
+.graph-section.visible{display:block;}
+.graph-title{font-size:11px;font-weight:900;color:var(--gray);letter-spacing:0.5px;margin-bottom:12px;text-align:center;}
+svg.market-graph{display:block;width:100%;max-width:320px;margin:0 auto;}
+.curve-group{transition:transform 0.8s cubic-bezier(0.34,1.1,0.64,1);}
+.graph-legend{display:flex;gap:14px;justify-content:center;font-size:11px;font-weight:700;margin-top:10px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:4px;}
+.legend-line{width:18px;height:3px;border-radius:2px;}
+.explanation{margin-top:14px;background:#f5f8ff;border:1.5px solid #c2d4f0;border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.7;color:#333;display:none;}
+.explanation.visible{display:block;}
+.exp-label{font-size:11px;font-weight:900;color:var(--blue);letter-spacing:0.5px;margin-bottom:6px;}
+.explanation strong{color:var(--blue);}
+.explanation .acc{color:var(--accent);font-weight:700;}
+.btn-row{display:none;gap:10px;margin-top:16px;}
+.btn-row.visible{display:flex;}
+.btn-card-retry{padding:10px 20px;border:2px solid var(--dark);border-radius:8px;background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--dark);cursor:pointer;transition:all 0.15s;}
+.btn-card-retry:hover{background:var(--dark);color:#fff;}
+.btn-next{flex:1;padding:10px 20px;border:none;border-radius:8px;background:var(--accent);font-family:var(--font);font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:background 0.15s;}
+.btn-next:hover{background:#c94008;}
+.locked-overlay{padding:28px 20px;text-align:center;color:#bbb;font-size:14px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.lock-icon{font-size:28px;}
+.complete-card{background:var(--dark);border-radius:16px;padding:36px 24px;text-align:center;color:#fff;display:none;margin-bottom:20px;}
+.complete-card .trophy{font-size:52px;margin-bottom:16px;}
+.complete-card h2{font-size:22px;font-weight:900;margin-bottom:8px;}
+.complete-card h2 span{color:var(--yellow);}
+.complete-card .main-p{font-size:14px;color:#aaa;line-height:1.65;margin-bottom:20px;}
+.score-dots{display:flex;justify-content:center;gap:8px;margin-bottom:20px;}
+.score-dot{width:14px;height:14px;border-radius:50%;background:#333;}
+.score-dot.ok{background:var(--green);}
+.score-dot.ng{background:var(--red);}
+.draw-reminder{background:#2e2b27;border:1.5px solid #555;border-radius:10px;padding:14px 18px;margin-bottom:16px;text-align:left;}
+.draw-reminder .dr-label{font-size:11px;font-weight:900;color:#aaa;letter-spacing:1px;margin-bottom:6px;}
+.draw-reminder p{font-size:13px;color:#ccc;line-height:1.6;}
+.draw-reminder strong{color:#fff;}
+.reward-box{background:#1a1714;border:2px solid var(--accent);border-radius:12px;padding:18px 20px;margin-bottom:20px;text-align:left;}
+.reward-box .reward-label{font-size:11px;font-weight:900;color:var(--accent);letter-spacing:1.5px;margin-bottom:8px;}
+.reward-box .reward-text{font-size:16px;font-weight:700;color:#fff;line-height:1.5;}
+.reward-box .reward-sub{font-size:12px;color:#888;margin-top:6px;}
+.btn-restart{width:100%;padding:13px;border:2px solid #555;border-radius:10px;background:transparent;font-family:var(--font);font-size:14px;font-weight:700;color:#aaa;cursor:pointer;transition:all 0.15s;}
+.btn-restart:hover{border-color:#aaa;color:#fff;}
+</style>
+</head>
+<body>
+<div class="top-header">
+  <div class="tag">4단원 · 시장 경제와 가격 · 복습 퀴즈</div>
+  <h1>시장 가격 <span>변동</span> 연습</h1>
+</div>
+<div class="progress-bar-wrap">
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 4</div>
+</div>
+<div class="container" id="quizContainer"></div>
+
+<script>
+// ── 문제 데이터 (왼쪽2 + 오른쪽2) ──
+const QUESTIONS=[
+  {
+    id:0, market:'아이돌 굿즈 시장', tag:'수요 변화',
+    situation:'인기 아이돌 그룹 <strong>「NOVA」</strong>가 갑자기 해체를 선언했다.<br>팬들의 굿즈 구매 열기가 급격히 식었다.',
+    answerCurve:'수요 곡선', answerDir:'왼쪽', answerResult:'가격↓ 거래량↓',
+    moveCurve:'demand', moveDir:'left',
+    explanation:`팬들의 구매 열기가 식은 것은 <strong>소비자 기호(선호) 변화</strong>로, <span class="acc">가격 이외의 수요 변화 요인</span>이에요.<br>
+수요 곡선(D)이 <strong>왼쪽으로 이동</strong> → 새 균형점은 <strong>왼쪽 아래</strong>로 이동 → <strong>균형 가격 하락, 균형 거래량 감소</strong>.`
+  },
+  {
+    id:1, market:'아이돌 굿즈 시장', tag:'공급 변화',
+    situation:'굿즈 제조사가 <strong>AI 자동화 공정을 도입</strong>해 생산 비용이 크게 낮아졌다.<br>같은 가격에 훨씬 많은 굿즈를 공급할 수 있게 됐다.',
+    answerCurve:'공급 곡선', answerDir:'오른쪽', answerResult:'가격↓ 거래량↑',
+    moveCurve:'supply', moveDir:'right',
+    explanation:`생산 비용 감소는 <strong>생산 기술 발전</strong>으로 인한 것으로, <span class="acc">가격 이외의 공급 변화 요인</span>이에요.<br>
+공급 곡선(S)이 <strong>오른쪽으로 이동</strong> → 새 균형점은 <strong>오른쪽 아래</strong>로 이동 → <strong>균형 가격 하락, 균형 거래량 증가</strong>.`
+  },
+  {
+    id:2, market:'삼겹살 시장', tag:'수요 변화',
+    situation:'유명 의학 저널에 <strong>"삼겹살의 단백질이 건강에 유익하다"</strong>는 연구 결과가 발표됐다.<br>삼겹살을 찾는 소비자가 크게 늘었다.',
+    answerCurve:'수요 곡선', answerDir:'오른쪽', answerResult:'가격↑ 거래량↑',
+    moveCurve:'demand', moveDir:'right',
+    explanation:`소비자의 건강 인식 변화는 <strong>소비자 기호(선호) 변화</strong>로, <span class="acc">가격 이외의 수요 변화 요인</span>이에요.<br>
+수요 곡선(D)이 <strong>오른쪽으로 이동</strong> → 새 균형점은 <strong>오른쪽 위</strong>로 이동 → <strong>균형 가격 상승, 균형 거래량 증가</strong>.`
+  },
+  {
+    id:3, market:'삼겹살 시장', tag:'공급 변화',
+    situation:'전국적으로 <strong>구제역이 발생</strong>해 돼지를 대량 살처분했다.<br>돼지 농가의 사육 수가 절반으로 줄었다.',
+    answerCurve:'공급 곡선', answerDir:'왼쪽', answerResult:'가격↑ 거래량↓',
+    moveCurve:'supply', moveDir:'left',
+    explanation:`구제역으로 인한 살처분은 <strong>공급자 수(돼지 농가) 감소</strong>로, <span class="acc">가격 이외의 공급 변화 요인</span>이에요.<br>
+공급 곡선(S)이 <strong>왼쪽으로 이동</strong> → 새 균형점은 <strong>왼쪽 위</strong>로 이동 → <strong>균형 가격 상승, 균형 거래량 감소</strong>.`
+  }
+];
+
+const state={completed:[false,false,false,false],correct:[false,false,false,false]};
+
+// ── SVG 좌표 상수 ──
+// 수요선 D: (PX1,PY1)→(PX2,PY2)  SVG에서 우하향 (가격↓ 수량↑)
+// 공급선 S: (PX1,PY2)→(PX2,PY1)  SVG에서 우상향 (가격↑ 수량↑)
+// 교점: 중앙 (EQX, EQY)
+const PX1=44, PX2=256, PY1=14, PY2=172;
+const EQX=(PX1+PX2)/2;  // 150
+const EQY=(PY1+PY2)/2;  // 93
+const SHIFT=46;
+
+// ── 새 균형점 계산 ──
+// D와 S가 완전 대칭 구조(기울기가 md와 -md)이므로
+// 어느 곡선이 dx만큼 이동하든 새 균형점의 x좌표는 EQX + dx/2
+// demand 이동: ny = S선 위의 y값 = -md*(nx-PX1)+PY2
+// supply 이동: ny = D선 위의 y값 =  md*(nx-PX1)+PY1
+function calcNewEq(moveCurve, moveDir){
+  const dx = moveDir==='left' ? -SHIFT : SHIFT;
+  const md = (PY2-PY1)/(PX2-PX1);
+  const nx = EQX + dx/2;
+  const ny = moveCurve==='demand'
+    ? -md*(nx-PX1)+PY2    // D 이동 → S선 위의 교점
+    :  md*(nx-PX1)+PY1;   // S 이동 → D선 위의 교점
+  return {x:nx, y:ny};
+}
+
+// ── SVG 생성 ──
+function makeSVG(qId){
+  const GW=300, GH=200;
+  return `<svg id="svg-${qId}" class="market-graph" viewBox="0 0 ${GW} ${GH}" xmlns="http://www.w3.org/2000/svg">
+  <line x1="${PX1}" y1="${PY1-4}" x2="${PX1}" y2="${PY2+8}" stroke="#555" stroke-width="1.5"/>
+  <line x1="${PX1-8}" y1="${PY2}" x2="${PX2+8}" y2="${PY2}" stroke="#555" stroke-width="1.5"/>
+  <polygon points="${PX1},${PY1-4} ${PX1-4},${PY1+8} ${PX1+4},${PY1+8}" fill="#555"/>
+  <polygon points="${PX2+8},${PY2} ${PX2},${PY2-4} ${PX2},${PY2+4}" fill="#555"/>
+  <text x="${PX1-10}" y="${PY1+2}" font-size="10" fill="#666" font-family="Noto Sans KR,sans-serif" text-anchor="middle">가격</text>
+  <text x="${PX2+18}" y="${PY2+4}" font-size="10" fill="#666" font-family="Noto Sans KR,sans-serif" text-anchor="middle">수량</text>
+  <!-- 수요곡선 D (선만 이동) -->
+  <g id="gd-${qId}" class="curve-group" style="transform:translateX(0px)">
+    <line x1="${PX1}" y1="${PY1}" x2="${PX2}" y2="${PY2}" stroke="#2356a8" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- D 라벨 (원래 위치 고정) -->
+  <text id="lbl-d-${qId}" x="${PX2-2}" y="${PY2-4}" font-size="13" font-weight="bold" fill="#2356a8" font-family="Noto Sans KR,sans-serif" text-anchor="end">D</text>
+  <!-- D' 라벨 (이동 후 표시) -->
+  <text id="lbl-dnew-${qId}" x="${PX2-2}" y="${PY2-4}" font-size="12" font-weight="bold" fill="#2356a8" font-family="Noto Sans KR,sans-serif" text-anchor="end" opacity="0">D'</text>
+  <!-- 공급곡선 S (선만 이동) -->
+  <g id="gs-${qId}" class="curve-group" style="transform:translateX(0px)">
+    <line x1="${PX1}" y1="${PY2}" x2="${PX2}" y2="${PY1}" stroke="#e8500a" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- S 라벨 (원래 위치 고정) -->
+  <text id="lbl-s-${qId}" x="${PX2-2}" y="${PY1+14}" font-size="13" font-weight="bold" fill="#e8500a" font-family="Noto Sans KR,sans-serif" text-anchor="end">S</text>
+  <!-- S' 라벨 (이동 후 표시) -->
+  <text id="lbl-snew-${qId}" x="${PX2-2}" y="${PY1+14}" font-size="12" font-weight="bold" fill="#e8500a" font-family="Noto Sans KR,sans-serif" text-anchor="end" opacity="0">S'</text>
+  <!-- 기존 균형점 -->
+  <circle cx="${EQX}" cy="${EQY}" r="5" fill="#333" stroke="#fff" stroke-width="1.5"/>
+  <text x="${EQX+8}" y="${EQY-6}" font-size="10" fill="#333" font-family="Noto Sans KR,sans-serif">균형점</text>
+  <!-- 새 균형점 (처음엔 숨김) -->
+  <g id="eq-new-${qId}" opacity="0" style="transition:opacity 0.5s ease 0.7s">
+    <circle id="eq-nc-${qId}" cx="${EQX}" cy="${EQY}" r="6" fill="#1a7a4a" stroke="#fff" stroke-width="2"/>
+    <text id="eq-nl-${qId}" x="${EQX+8}" y="${EQY-8}" font-size="10" fill="#1a7a4a" font-family="Noto Sans KR,sans-serif" font-weight="bold">새 균형점</text>
+  </g>
+</svg>
+<div class="graph-legend">
+  <div class="legend-item"><div class="legend-line" style="background:#2356a8"></div><span style="color:#2356a8">수요 곡선(D)</span></div>
+  <div class="legend-item"><div class="legend-line" style="background:#e8500a"></div><span style="color:#e8500a">공급 곡선(S)</span></div>
+  <div class="legend-item"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5" fill="#1a7a4a" stroke="#fff" stroke-width="1.5"/></svg><span style="color:#1a7a4a">새 균형점</span></div>
+</div>`;}
+
+// ── 곡선 애니메이션 ──
+function animateCurve(qId, moveCurve, moveDir){
+  const px = moveDir==='left' ? -SHIFT : SHIFT;
+
+  // 선 그룹 이동
+  const lineEl = document.getElementById(moveCurve==='demand' ? `gd-${qId}` : `gs-${qId}`);
+  if(lineEl) lineEl.style.transform = `translateX(${px}px)`;
+
+  // 라벨: 원래 것 흐리게 + 이동된 위치에 D'/S' 표시
+  if(moveCurve==='demand'){
+    const lo = document.getElementById(`lbl-d-${qId}`);
+    const ln = document.getElementById(`lbl-dnew-${qId}`);
+    if(lo && ln){
+      // D 라벨은 오른쪽 아래 끝 (PX2, PY2 근처) → px 이동
+      ln.setAttribute('x', (PX2 - 2 + px).toFixed(1));
+      ln.setAttribute('y', (PY2 - 4).toFixed(1));
+      setTimeout(()=>{ lo.style.opacity='0.25'; ln.style.opacity='1'; }, 300);
+    }
+  } else {
+    const lo = document.getElementById(`lbl-s-${qId}`);
+    const ln = document.getElementById(`lbl-snew-${qId}`);
+    if(lo && ln){
+      // S 라벨은 오른쪽 위 끝 (PX2, PY1 근처) → px 이동
+      ln.setAttribute('x', (PX2 - 2 + px).toFixed(1));
+      ln.setAttribute('y', (PY1 + 14).toFixed(1));
+      setTimeout(()=>{ lo.style.opacity='0.25'; ln.style.opacity='1'; }, 300);
+    }
+  }
+
+  // 새 균형점 배치
+  const eq = calcNewEq(moveCurve, moveDir);
+  const nc = document.getElementById(`eq-nc-${qId}`);
+  const nl = document.getElementById(`eq-nl-${qId}`);
+  const ng = document.getElementById(`eq-new-${qId}`);
+  if(nc){ nc.setAttribute('cx', eq.x.toFixed(1)); nc.setAttribute('cy', eq.y.toFixed(1)); }
+  if(nl){
+    // 라벨: 경계 넘지 않도록 위치 조정
+    const lx = eq.x > 185 ? eq.x - 60 : eq.x + 8;
+    const ly = eq.y < 26  ? eq.y + 16  : eq.y - 8;
+    nl.setAttribute('x', lx.toFixed(1));
+    nl.setAttribute('y', ly.toFixed(1));
+  }
+  if(ng) setTimeout(()=>{ ng.style.opacity='1'; }, 700);
+}
+
+// ── 카드 HTML 생성 ──
+function makeCardHTML(q, locked){
+  if(locked) return `
+    <div class="q-card-header"><div class="q-num">${q.id+1}</div><div><div class="q-topic">${q.market} <span>${q.tag}</span></div></div></div>
+    <div class="q-body"><div class="locked-overlay"><div class="lock-icon">🔒</div><div>${q.id}번을 먼저 완료하세요</div></div></div>`;
+  const isLast = q.id===3;
+  return `
+    <div class="q-card-header"><div class="q-num">${q.id+1}</div><div><div class="q-topic">${q.market} <span>${q.tag}</span></div></div></div>
+    <div class="situation"><div class="sit-label">📢 상황</div><p>${q.situation}</p></div>
+    <div class="q-body">
+      <div class="step-label"><span class="step-badge">A</span> 어느 곡선이 이동할까요?</div>
+      <div class="choices" id="cA-${q.id}">
+        <button class="choice-btn" data-val="수요 곡선" onclick="sel('A',${q.id},this)">수요 곡선</button>
+        <button class="choice-btn" data-val="공급 곡선" onclick="sel('A',${q.id},this)">공급 곡선</button>
+        <button class="choice-btn" data-val="둘 다"    onclick="sel('A',${q.id},this)">둘 다</button>
+      </div>
+      <button class="confirm-btn" id="cfA-${q.id}" onclick="doConfirm('A',${q.id})">✓ 확인</button>
+      <div class="result-msg" id="rA-${q.id}"></div>
+      <button class="retry-step-btn" id="rsA-${q.id}" onclick="retryStep('A',${q.id})">↺ 다시 풀기</button>
+      <hr class="divider">
+      <div class="step-label" id="lbB-${q.id}" style="opacity:0.3"><span class="step-badge">B</span> 어느 방향으로 이동할까요?</div>
+      <div class="choices" id="cB-${q.id}">
+        <button class="choice-btn locked" data-val="왼쪽"   onclick="sel('B',${q.id},this)">← 왼쪽 (감소)</button>
+        <button class="choice-btn locked" data-val="오른쪽" onclick="sel('B',${q.id},this)">오른쪽 (증가) →</button>
+      </div>
+      <button class="confirm-btn" id="cfB-${q.id}" onclick="doConfirm('B',${q.id})">✓ 확인</button>
+      <div class="result-msg" id="rB-${q.id}"></div>
+      <button class="retry-step-btn" id="rsB-${q.id}" onclick="retryStep('B',${q.id})">↺ 다시 풀기</button>
+      <div class="graph-section" id="graph-${q.id}">
+        <div class="graph-title">📊 곡선이 이동했어요 — 새 균형점(●)의 위치를 확인하세요</div>
+        <div class="graph-wrap">${makeSVG(q.id)}</div>
+      </div>
+      <hr class="divider" id="dvC-${q.id}" style="display:none">
+      <div class="step-label" id="lbC-${q.id}" style="display:none"><span class="step-badge">C</span> 새 균형점을 보고 — 균형 가격·거래량 변화는?</div>
+      <div class="choices" id="cC-${q.id}" style="display:none">
+        <button class="choice-btn" data-val="가격↑ 거래량↑" onclick="sel('C',${q.id},this)">가격↑ 거래량↑</button>
+        <button class="choice-btn" data-val="가격↓ 거래량↓" onclick="sel('C',${q.id},this)">가격↓ 거래량↓</button>
+        <button class="choice-btn" data-val="가격↑ 거래량↓" onclick="sel('C',${q.id},this)">가격↑ 거래량↓</button>
+        <button class="choice-btn" data-val="가격↓ 거래량↑" onclick="sel('C',${q.id},this)">가격↓ 거래량↑</button>
+      </div>
+      <button class="confirm-btn" id="cfC-${q.id}" onclick="doConfirm('C',${q.id})">✓ 확인</button>
+      <div class="result-msg" id="rC-${q.id}" style="display:none"></div>
+      <button class="retry-step-btn" id="rsC-${q.id}" onclick="retryStep('C',${q.id})">↺ 다시 풀기</button>
+      <div class="explanation" id="exp-${q.id}"><div class="exp-label">💡 해설</div>${q.explanation}</div>
+      <div class="btn-row" id="btns-${q.id}">
+        <button class="btn-card-retry" onclick="retryCard(${q.id})">↺ 처음부터</button>
+        <button class="btn-next" onclick="${isLast?'showComplete()':`nextCard(${q.id})`}">${isLast?'🏆 결과 확인':'다음 문제 →'}</button>
+      </div>
+    </div>`;}
+
+// ── 선택 (확정 전 자유롭게 변경) ──
+function sel(step, qId, btn){
+  const c = document.getElementById(`c${step}-${qId}`);
+  if(btn.classList.contains('locked')||btn.classList.contains('confirmed-correct')||btn.classList.contains('confirmed-wrong')) return;
+  c.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById(`cf${step}-${qId}`).classList.add('visible');
+}
+
+// ── 확정 ──
+function doConfirm(step, qId){
+  const q = QUESTIONS[qId];
+  const ans = {A:q.answerCurve, B:q.answerDir, C:q.answerResult};
+  const c = document.getElementById(`c${step}-${qId}`);
+  const selBtn = c.querySelector('.choice-btn.selected');
+  if(!selBtn) return;
+  const ok = selBtn.dataset.val === ans[step];
+
+  c.querySelectorAll('.choice-btn').forEach(b=>{
+    b.classList.remove('selected');
+    if(b.dataset.val===ans[step]) b.classList.add('confirmed-correct');
+  });
+  if(!ok) selBtn.classList.add('confirmed-wrong');
+  document.getElementById(`cf${step}-${qId}`).classList.remove('visible');
+
+  const r = document.getElementById(`r${step}-${qId}`);
+  r.style.display='block';
+  r.className='result-msg '+(ok?'ok':'ng');
+  r.textContent = ok ? '✅ 맞아요!' : `❌ 정답은 "${ans[step]}"`;
+
+  if(!ok){
+    document.getElementById(`rs${step}-${qId}`).classList.add('visible');
+    return;
+  }
+
+  if(step==='A'){
+    document.getElementById(`lbB-${qId}`).style.opacity='1';
+    document.getElementById(`cB-${qId}`).querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('locked'));
+  } else if(step==='B'){
+    const g = document.getElementById(`graph-${qId}`);
+    g.classList.add('visible');
+    setTimeout(()=>animateCurve(qId, q.moveCurve, q.moveDir), 200);
+    setTimeout(()=>{
+      document.getElementById(`dvC-${qId}`).style.display='block';
+      document.getElementById(`lbC-${qId}`).style.display='flex';
+      const cc = document.getElementById(`cC-${qId}`);
+      cc.style.display='flex'; cc.style.flexWrap='wrap';
+      document.getElementById(`rC-${qId}`).style.display='block';
+    }, 1200);
+  } else {
+    state.completed[qId]=true; state.correct[qId]=true;
+    document.getElementById(`exp-${qId}`).classList.add('visible');
+    document.getElementById(`btns-${qId}`).classList.add('visible');
+    updateProgress();
+  }
+}
+
+// ── 단계별 다시 풀기 ──
+function retryStep(step, qId){
+  const c = document.getElementById(`c${step}-${qId}`);
+  c.querySelectorAll('.choice-btn').forEach(b=>b.classList.remove('confirmed-correct','confirmed-wrong','selected'));
+  const r = document.getElementById(`r${step}-${qId}`);
+  r.className='result-msg'; r.textContent='';
+  document.getElementById(`rs${step}-${qId}`).classList.remove('visible');
+}
+
+// ── 카드 전환 ──
+function nextCard(qId){
+  const nid=qId+1;
+  const card=document.getElementById(`card-${nid}`);
+  card.style.animation='none';
+  card.innerHTML=makeCardHTML(QUESTIONS[nid],false);
+  void card.offsetWidth;
+  card.style.animation='fadeUp 0.4s ease forwards';
+  setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+function retryCard(qId){
+  const card=document.getElementById(`card-${qId}`);
+  card.style.animation='none';
+  card.innerHTML=makeCardHTML(QUESTIONS[qId],false);
+  void card.offsetWidth;
+  card.style.animation='fadeUp 0.4s ease forwards';
+  state.completed[qId]=false; state.correct[qId]=false;
+  updateProgress();
+}
+
+// ── 완료 ──
+function showComplete(){
+  const allOk=state.correct.every(Boolean);
+  const el=document.getElementById('completeCard');
+  el.style.display='block';
+  document.getElementById('scoreDots').innerHTML=
+    state.correct.map(c=>`<div class="score-dot ${c?'ok':'ng'}"></div>`).join('');
+  if(!allOk){
+    el.querySelector('h2').innerHTML='수고했어요! <span>결과 확인</span>';
+    el.querySelector('.main-p').textContent='틀린 문제는 다시 시도해서 모두 맞혀 보세요!';
+    el.querySelector('.reward-box').style.display='none';
+    el.querySelector('.draw-reminder').style.display='none';
+  }
+  setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+function restartAll(){
+  state.completed.fill(false); state.correct.fill(false);
+  renderCards();
+  document.getElementById('completeCard').style.display='none';
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateProgress(){
+  const done=state.completed.filter(Boolean).length;
+  document.getElementById('progressFill').style.width=(done/4*100)+'%';
+  document.getElementById('progressText').textContent=done+' / 4';
+}
+
+// ── 초기 렌더링 ──
+function renderCards(){
+  document.getElementById('quizContainer').innerHTML=
+    QUESTIONS.map((q,i)=>`
+      <div class="q-card" id="card-${i}" style="animation-delay:${i*0.08}s">
+        ${makeCardHTML(q, i>0)}
+      </div>`).join('')+`
+    <div class="complete-card" id="completeCard" style="display:none">
+      <div class="trophy">🏆</div>
+      <div class="score-dots" id="scoreDots"></div>
+      <h2>4문제 모두 <span>정답</span>!</h2>
+      <p class="main-p">수요·공급 곡선 이동을 완벽하게 이해했어요.</p>
+      <div class="draw-reminder">
+        <div class="dr-label">✏️ 이제 종이에 그려보세요</div>
+        <p>각 문제의 그래프를 <strong>직접 손으로</strong> 그려서 확인해 보세요.<br>이동한 곡선과 새 균형점을 교과서 여백이나 노트에 그려보면 더 잘 기억돼요!</p>
+      </div>
+      <div class="reward-box">
+        <div class="reward-label">🎁 보상</div>
+        <div class="reward-text">선생님께 가서<br>미니 시나리오 학습지를 받아오세요!</div>
+        <div class="reward-sub">이름을 말하고 "다 맞혔어요!" 라고 하면 돼요 😊</div>
+      </div>
+      <button class="btn-restart" onclick="restartAll()">↺ 처음부터 다시 풀기</button>
+    </div>`;}
+
+renderCards(); updateProgress();
+</script>
+</body>
+</html>
